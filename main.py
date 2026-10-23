@@ -1,10 +1,37 @@
-import json, subprocess, tkinter as tk
+import json, os, subprocess, sys, traceback, tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox
 
+def _choose_data_dir():
+    candidates = []
+    local_app_data = os.environ.get("LOCALAPPDATA")
+    if local_app_data:
+        candidates.append(Path(local_app_data) / "PSP-NEXUS")
+    candidates.extend([Path.home() / "PSP_NEXUS", Path(os.environ.get("TEMP", ".")) / "PSP-NEXUS"])
+    for candidate in candidates:
+        try:
+            candidate.mkdir(parents=True, exist_ok=True)
+            return candidate
+        except OSError:
+            continue
+    return Path.cwd()
+
+def _show_startup_error(exc_text):
+    try:
+        base = Path(os.environ.get("LOCALAPPDATA", str(Path.home())))
+        log_path = base / "PSP-NEXUS-startup-error.txt"
+        log_path.write_text(exc_text, encoding="utf-8")
+        note = f"PSP NEXUS could not start. Details saved to:\\n{log_path}"
+    except Exception:
+        note = "PSP NEXUS could not start. Error details could not be saved."
+    try:
+        import ctypes
+        ctypes.windll.user32.MessageBoxW(None, note, "PSP NEXUS - Startup Error", 0x10)
+    except Exception:
+        pass
+
 APP = "PSP NEXUS"
-DATA = Path.home() / "PSP_NEXUS"
-DATA.mkdir(exist_ok=True)
+DATA = _choose_data_dir()
 CONFIG = DATA / "settings.json"
 EXTS = {".iso", ".cso", ".pbp", ".chd"}
 BG, PANEL, CYAN, WHITE, MUTED = "#07111f", "#0d1b2d", "#37d9ff", "#eef7ff", "#8da7bd"
@@ -171,6 +198,10 @@ class Nexus:
         self.button(win, "SAVE SETTINGS", save, True).pack(anchor="e", padx=24, pady=(0, 20))
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    Nexus(root)
-    root.mainloop()
+    try:
+        root = tk.Tk()
+        Nexus(root)
+        root.mainloop()
+    except BaseException:
+        _show_startup_error(traceback.format_exc())
+        raise
