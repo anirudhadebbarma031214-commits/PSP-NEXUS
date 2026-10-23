@@ -30,22 +30,12 @@ jobs:
       - name: Install build tools
         run: python -m pip install --upgrade pip pyinstaller
 
-      - name: Build normal Windows app
-        run: python -m PyInstaller --noconfirm --clean --onefile --windowed --name PSP-NEXUS --distpath dist/release main.py
+      - name: Build PSP NEXUS
+        run: python -m PyInstaller --noconfirm --clean --onefile --windowed --name PSP-NEXUS main.py
 
-      - name: Build diagnostic app (shows startup errors)
-        run: python -m PyInstaller --noconfirm --clean --onefile --console --name PSP-NEXUS-Diagnostic --distpath dist/diagnostic main.py
-
-      - name: Upload normal Windows app
+      - name: Upload PSP NEXUS
         uses: actions/upload-artifact@v4
         with:
           name: PSP-NEXUS-Windows
-          path: dist/release/PSP-NEXUS.exe
-          if-no-files-found: error
-
-      - name: Upload diagnostic Windows app
-        uses: actions/upload-artifact@v4
-        with:
-          name: PSP-NEXUS-Diagnostic
-          path: dist/diagnostic/PSP-NEXUS-Diagnostic.exe
+          path: dist/PSP-NEXUS.exe
           if-no-files-found: error
