@@ -22,16 +22,28 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.11"
 
       - name: Check Python syntax
         run: python -m py_compile main.py
 
-      - name: Install build tools
-        run: python -m pip install --upgrade pip pyinstaller
+      - name: Install a stable PyInstaller version
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "pyinstaller==6.11.1"
+
+      - name: Show build tool versions
+        run: |
+          python --version
+          python -m PyInstaller --version
 
       - name: Build PSP NEXUS
         run: python -m PyInstaller --noconfirm --clean --onefile --windowed --name PSP-NEXUS main.py
+
+      - name: Verify EXE exists
+        run: |
+          if (!(Test-Path "dist/PSP-NEXUS.exe")) { throw "PyInstaller did not create dist/PSP-NEXUS.exe" }
+          Get-Item "dist/PSP-NEXUS.exe" | Select-Object Name, Length
 
       - name: Upload PSP NEXUS
         uses: actions/upload-artifact@v4
